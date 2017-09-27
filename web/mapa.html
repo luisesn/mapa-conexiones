@@ -25,6 +25,7 @@
 			var map;
 			var markers=[];
 			
+			// Inicializamos el mapa (callback desde la carga de la librería de GMaps)
       function initMap() {
 				directionsService = new google.maps.DirectionsService;
 				directionsDisplay = new google.maps.DirectionsRenderer;
@@ -35,6 +36,7 @@
 				});
 			}
 
+			// Esta función crea un marcador y lo agrega al mapa.
 			function addMarker(lat, lng, t, icon) {
 				var myLatlng = new google.maps.LatLng(lat, lng);
 				var marker = new google.maps.Marker({
@@ -49,10 +51,15 @@
 			}
 
 			var socket;
+			// Esperamos a que todo cargue.
 			$(document).ready(function () {
+				// Creamos la conexión socket.io con el servidor
 				socket = io();
+				// Y que pasa cuando nos llegue un mensaje.
 				socket.on('pos', function(obj){
+					// Un icono para casos que no deberían pasar...
 					var icon='http://maps.google.com/mapfiles/ms/icons/purple-pushpin.png';
+					// Dependiendo del puerto destino ponemos un icono u otro.
 					switch (parseInt(obj.DPT)) {
 						case 22:
 							icon='http://maps.google.com/mapfiles/ms/icons/red-pushpin.png';
@@ -64,6 +71,7 @@
 							icon='http://maps.google.com/mapfiles/ms/icons/blue-pushpin.png';
 							break;
 					}
+					// Y añadimos el marcador al mapa
 					addMarker(obj.lat, obj.lng, obj.info, icon);
 				});
 			});
