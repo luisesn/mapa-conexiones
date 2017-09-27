@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+		<meta charset="utf-8">
+		<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <style>
+      #map {
+        height: 100%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+		<script>
+		</script>
+  </head>
+  <body>
+		<div id="map"></div>
+		<div id="content"></div>
+    <script>
+			var map;
+			var markers=[];
+			
+      function initMap() {
+				directionsService = new google.maps.DirectionsService;
+				directionsDisplay = new google.maps.DirectionsRenderer;
+				
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 40, lng: -4},
+          zoom: 2
+				});
+			}
+
+			function addMarker(lat, lng, t, icon) {
+				var myLatlng = new google.maps.LatLng(lat, lng);
+				var marker = new google.maps.Marker({
+						position: myLatlng,
+						title:t,
+						icon: icon,
+						anchor: new google.maps.Point(9, 32), // Hace falta centrar bien esta chincheta
+						draggable: false	
+				});
+				marker.setMap(map);
+				markers.push(marker);
+			}
+
+			var socket;
+			$(document).ready(function () {
+				socket = io();
+				socket.on('pos', function(obj){
+					var icon='http://maps.google.com/mapfiles/ms/icons/purple-pushpin.png';
+					switch (parseInt(obj.DPT)) {
+						case 22:
+							icon='http://maps.google.com/mapfiles/ms/icons/red-pushpin.png';
+							break;
+						case 80:
+							icon='http://maps.google.com/mapfiles/ms/icons/grn-pushpin.png';
+							break;
+						case 21:
+							icon='http://maps.google.com/mapfiles/ms/icons/blue-pushpin.png';
+							break;
+					}
+					addMarker(obj.lat, obj.lng, obj.info, icon);
+				});
+			});
+
+    </script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJNaGAoEMYp9k2KOzkmWArlj6Cb439oyU&callback=initMap" async defer></script>
+		<script src="/socket.io/socket.io.js"></script>	
+		<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+		<script src="https://code.jquery.com/color/jquery.color-2.1.2.min.js"></script>
+  </body>
+</html>
