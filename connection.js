@@ -25,44 +25,48 @@ serverHttp.listen(65081, function() {
   console.log(getDateTime() + " Servidor corriendo en http://h.norsip.com:65081");
 });
 
-// Initialize watcher.
+// Inicializamos el "vigilante" de ficheros
 var watcher = chokidar.watch('/var/log/netlog.log', {
   ignored: /(^|[\/\\])\../,
   persistent: true
 });
 
 watcher.on('change', (path, stats) => {
+  // Si el tamaño del fichero es mayor de cero lo leemos línea a línea
+  // si está vacio pasamos
   if (stats.size>0) {
-    //if (stats) console.log(`File ${path} changed size to ${stats.size}`);
     var lineReader = require('readline').createInterface({
       input: require('fs').createReadStream(path)
     });
     
     lineReader.on('line', function (line) {
-      //console.log('Line from file:', line);
+      // Por cada línea hacemos un pequeño "parsing" y creamos una propiedad en un objeto con cada una
       var o=line.split(" ");
       var obj={};
       for (var i=0; i<o.length; i++) {
         var tmp=o[i].split("=");
         if (tmp.length==2) {
-          var key=tmp[0];
-          var value=tmp[1];
-          obj[key]=value;
+          obj[tmp[0]]=tmp[1];
         }
       }
+      // Verificamos si hay información geográfica de la ip
       var pais=geoip.lookup(obj.SRC);
       if (pais!=null) {
         //console.log(pais);
         obj.lat=pais.ll[0];
         obj.lng=pais.ll[1];
         obj.info=pais.country;
+        // Si la hay enviamos un mensaje "pos" vía socket.io a los clientes que tengamos conectados con los datos
         io.emit('pos', obj);
       } else {
+        // Sino hay información lo imprimimos por consola, en el mapa no nos vale para nada.
         console.log("Sin info de " + obj.SRC);
       }
     });
 
+    // Cuando acabemos de procesar el ficheo
     lineReader.on('close', function () {
+      // Lo borramos, igual se pierde algo por el camino pero así limpiamos, esto es un juguete eeeh
       fs.closeSync(fs.openSync(path, 'w'));
     });
   }
